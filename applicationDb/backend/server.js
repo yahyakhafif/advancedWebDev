@@ -9,6 +9,8 @@ const PORT = 3000;
 
 app.use(bodyParser.json());
 app.use(cors());
+app.use(express.static("public"));
+
 
 // Connect to SQLite database (or create if not exists)
 const db = new sqlite3.Database("database.db", (err) => {
