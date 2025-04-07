@@ -63,22 +63,22 @@
 - **Home Screen Prototype:**  
   - **Design Elements:** Clean, modern interface featuring a navigation bar, a card layout showcasing featured architecture styles.
   - **Interactivity:** Dynamic hover effects on style cards.
-  ![home screen](homeScreen.png)
+  ![home screen](./prototypes/homeScreen.png)
 
 - **Manage Styles Screen Prototype:**  
   - **Design Elements:** A list or grid view displaying user-added styles with clear action buttons for "Add," "Edit," and "Delete."  
   - **Interactivity:** Modal forms for adding/editing styles and confirmation dialogs for deletions.
-  ![manage styles](manageStyles.png)
+  ![manage styles](./prototypes/manageStyles.png)
 
 - **Recommendation Screen Prototype:**  
   - **Design Elements:** a results panel that dynamically displays AI-recommended styles with detailed information and visuals.  
   - **Interactivity:** Real-time visual feedback as users adjust preferences and smooth transitions when displaying results.
-  ![recommendation](recommendation.png)
+  ![recommendation](./prototypes/recommendation.png)
 
 - **Profile/Settings Screen Prototype:**  
   - **Design Elements:** A tabbed layout for user profile details, preferences.  
   - **Interactivity:** Editable fields with inline validation and a responsive design.
-  ![profile](profile.png)
+  ![profile](./prototypes/profile.png)
 
 ## 4. Information Architecture and Technical Design
 
