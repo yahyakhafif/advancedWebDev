@@ -35,15 +35,3 @@ exports.protect = async (req, res, next) => {
         });
     }
 };
-
-// Admin middleware
-exports.admin = (req, res, next) => {
-    if (req.user && req.user.isAdmin) {
-        next();
-    } else {
-        return res.status(401).json({
-            success: false,
-            error: 'Not authorized as an admin'
-        });
-    }
-};

@@ -22,10 +22,6 @@ const UserSchema = new mongoose.Schema({
         minlength: 6,
         select: false
     },
-    isAdmin: {
-        type: Boolean,
-        default: false
-    },
     favorites: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Style'
@@ -39,11 +35,16 @@ const UserSchema = new mongoose.Schema({
 // Encrypt password using bcrypt
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {
-        next();
+        return next();
     }
 
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
 });
 
 // Sign JWT and return

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const Style = require('../models/Style');
-const { protect, admin } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 
 // @route   GET api/styles
 // @desc    Get all architectural styles
@@ -40,12 +40,11 @@ router.get('/:id', async (req, res) => {
 
 // @route   POST api/styles
 // @desc    Create a new architectural style
-// @access  Private/Admin
+// @access  Private (any authenticated user)
 router.post(
     '/',
     [
-        protect,
-        admin,
+        protect, // Only authenticated users can create styles
         [
             check('name', 'Name is required').not().isEmpty(),
             check('period', 'Time period is required').not().isEmpty(),
@@ -99,13 +98,18 @@ router.post(
 
 // @route   PUT api/styles/:id
 // @desc    Update an architectural style
-// @access  Private/Admin
-router.put('/:id', protect, admin, async (req, res) => {
+// @access  Private (only creator)
+router.put('/:id', protect, async (req, res) => {
     try {
         let style = await Style.findById(req.params.id);
 
         if (!style) {
             return res.status(404).json({ msg: 'Style not found' });
+        }
+
+        // Check if user is the creator of the style
+        if (style.createdBy.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized to update this style' });
         }
 
         style = await Style.findByIdAndUpdate(
@@ -126,13 +130,18 @@ router.put('/:id', protect, admin, async (req, res) => {
 
 // @route   DELETE api/styles/:id
 // @desc    Delete an architectural style
-// @access  Private/Admin
-router.delete('/:id', protect, admin, async (req, res) => {
+// @access  Private (only creator)
+router.delete('/:id', protect, async (req, res) => {
     try {
         const style = await Style.findById(req.params.id);
 
         if (!style) {
             return res.status(404).json({ msg: 'Style not found' });
+        }
+
+        // Check if user is the creator of the style
+        if (style.createdBy.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized to delete this style' });
         }
 
         await style.deleteOne();
