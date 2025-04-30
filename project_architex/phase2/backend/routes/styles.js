@@ -3,6 +3,7 @@ const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const Style = require('../models/Style');
 const { protect } = require('../middleware/auth');
+const recommendationService = require('../services/recommendationService');
 
 // @route   GET api/styles
 // @desc    Get all architectural styles
@@ -17,23 +18,78 @@ router.get('/', async (req, res) => {
     }
 });
 
-// @route   GET api/styles/:id
-// @desc    Get style by ID
-// @access  Public
-router.get('/:id', async (req, res) => {
+// @route   GET api/styles/recommendations
+router.get('/recommendations', protect, async (req, res) => {
     try {
-        const style = await Style.findById(req.params.id);
+        // Get limit from query params or default to 3
+        const limit = req.query.limit ? parseInt(req.query.limit) : 3;
 
-        if (!style) {
-            return res.status(404).json({ msg: 'Style not found' });
+        // Get exclude IDs from query params if any
+        const excludeIds = req.query.exclude ? req.query.exclude.split(',') : [];
+
+        const recommendations = await recommendationService.getTimeBasedRecommendations(
+            req.user.id,
+            limit,
+            excludeIds
+        );
+
+        res.json(recommendations);
+    } catch (err) {
+        console.error('Recommendation error:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error getting recommendations'
+        });
+    }
+});
+
+// @route   GET api/styles/recommendations/replacement
+// @desc    Get a single replacement recommendation
+// @access  Private
+router.get('/recommendations/replacement', protect, async (req, res) => {
+    try {
+        // Current recommendation IDs to exclude
+        const currentIds = req.query.current ? req.query.current.split(',') : [];
+
+        const replacement = await recommendationService.getReplacementRecommendation(
+            req.user.id,
+            currentIds
+        );
+
+        if (!replacement) {
+            return res.status(404).json({
+                success: false,
+                message: 'No more recommendations available'
+            });
         }
 
-        res.json(style);
+        res.json(replacement);
+    } catch (err) {
+        console.error('Replacement recommendation error:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error getting replacement recommendation'
+        });
+    }
+});
+
+// @route   GET api/styles/search/:keyword
+// @desc    Search styles by keyword
+// @access  Public
+router.get('/search/:keyword', async (req, res) => {
+    try {
+        const keyword = req.params.keyword;
+        const styles = await Style.find({
+            $or: [
+                { name: { $regex: keyword, $options: 'i' } },
+                { description: { $regex: keyword, $options: 'i' } },
+                { characteristics: { $elemMatch: { $regex: keyword, $options: 'i' } } }
+            ]
+        });
+
+        res.json(styles);
     } catch (err) {
         console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Style not found' });
-        }
         res.status(500).send('Server Error');
     }
 });
@@ -49,8 +105,7 @@ router.post(
             check('name', 'Name is required').not().isEmpty(),
             check('period', 'Time period is required').not().isEmpty(),
             check('description', 'Description is required').not().isEmpty(),
-            check('characteristics', 'At least one characteristic is required').isArray({ min: 1 })
-        ]
+            check('characteristics', 'At least one characteristic is required').isArray({ min: 1 })]
     ],
     async (req, res) => {
         const errors = validationResult(req);
@@ -95,6 +150,28 @@ router.post(
         }
     }
 );
+
+// @route   GET api/styles/:id
+// @desc    Get style by ID
+// @access  Public
+router.get('/:id', async (req, res) => {
+    try {
+        const style = await Style.findById(req.params.id);
+
+        if (!style) {
+            return res.status(404).json({ msg: 'Style not found' });
+        }
+
+        res.json(style);
+    } catch (err) {
+        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'Style not found' });
+        }
+        res.status(500).send('Server Error');
+    }
+});
+
 
 // @route   PUT api/styles/:id
 // @desc    Update an architectural style
@@ -152,27 +229,6 @@ router.delete('/:id', protect, async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(404).json({ msg: 'Style not found' });
         }
-        res.status(500).send('Server Error');
-    }
-});
-
-// @route   GET api/styles/search/:keyword
-// @desc    Search styles by keyword
-// @access  Public
-router.get('/search/:keyword', async (req, res) => {
-    try {
-        const keyword = req.params.keyword;
-        const styles = await Style.find({
-            $or: [
-                { name: { $regex: keyword, $options: 'i' } },
-                { description: { $regex: keyword, $options: 'i' } },
-                { characteristics: { $elemMatch: { $regex: keyword, $options: 'i' } } }
-            ]
-        });
-
-        res.json(styles);
-    } catch (err) {
-        console.error(err.message);
         res.status(500).send('Server Error');
     }
 });

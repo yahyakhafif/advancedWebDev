@@ -460,3 +460,24 @@
 .not-found-content p {
   margin-bottom: 30px;
 }
+
+.recommendations-section {
+  margin-top: 50px;
+  margin-bottom: 50px;
+}
+
+.recommendation-explanation {
+  font-weight: 100;
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--dark-color);
+}
+
+.recommendations .style-card {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 8px rgba(60, 145, 230, 0.1);
+}
+
+.recommendations .style-card:hover {
+  box-shadow: 0 6px 12px rgba(60, 145, 230, 0.2);
+}

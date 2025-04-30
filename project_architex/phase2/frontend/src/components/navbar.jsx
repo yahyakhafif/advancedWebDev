@@ -33,9 +33,7 @@ const Navbar = () => {
                     </li>
                     {isAuthenticated ? (
                         <>
-                            <li>
-                                <Link to="/profile">Profile</Link>
-                            </li>
+
                             <li>
                                 <Link to="/styles">Styles</Link>
                             </li>
@@ -43,10 +41,14 @@ const Navbar = () => {
                                 <Link to="/styles/add">Add Style</Link>
                             </li>
                             <li>
+                                <Link to="/profile">Profile</Link>
+                            </li>
+                            <li>
                                 <button onClick={handleLogout} className="btn btn-outline">
                                     Logout
                                 </button>
                             </li>
+
                         </>
                     ) : (
                         <>

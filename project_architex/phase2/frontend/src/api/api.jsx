@@ -46,7 +46,17 @@ export const styleAPI = {
     createStyle: (styleData) => api.post('/api/styles', styleData),
     updateStyle: (id, styleData) => api.put(`/api/styles/${id}`, styleData),
     deleteStyle: (id) => api.delete(`/api/styles/${id}`),
-    searchStyles: (keyword) => api.get(`/api/styles/search/${keyword}`)
-};
+    searchStyles: (keyword) => api.get(`/api/styles/search/${keyword}`),
+    getRecommendations: (limit = 3, excludeIds = []) => {
+        const excludeParam = excludeIds.length > 0 ? `&exclude=${excludeIds.join(',')}` : '';
+        return api.get(`/api/styles/recommendations?limit=${limit}${excludeParam}`);
+    },
+
+    // Get a single replacement recommendation
+    getReplacementRecommendation: (currentIds = []) => {
+        const currentParam = currentIds.length > 0 ? `?current=${currentIds.join(',')}` : '';
+        return api.get(`/api/styles/recommendations/replacement${currentParam}`);
+    }
+}
 
 export default api;

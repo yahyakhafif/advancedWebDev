@@ -1,80 +1,104 @@
-import React, { useEffect, useState } from 'react';
+// frontend/src/components/Home.js
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { styleAPI } from '../api/api';
+import { styleAPI, userAPI } from '../api/api';
 import { useAuth } from '../hooks/useAuth';
 
 const Home = () => {
     const [featuredStyles, setFeaturedStyles] = useState([]);
+    const [recommendedStyles, setRecommendedStyles] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { isAdmin } = useAuth();
+    const [error, setError] = useState(null);
+    const { isAuthenticated, user } = useAuth();
 
+    // Hardcoded featured styles for non-logged-in users
+    const staticFeaturedStyles = [
+        {
+            _id: 'static1',
+            name: 'Gothic',
+            period: '12th-16th century',
+            description: 'Gothic architecture is characterized by pointed arches, ribbed vaults, flying buttresses, and large stained glass windows which allowed more light to enter than was possible with the thick walls of Romanesque architecture.',
+            imageUrl: 'https://images.unsplash.com/photo-1543832923-44667a44c804?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+            isStatic: true
+        },
+        {
+            _id: 'static2',
+            name: 'Art Deco',
+            period: '1920s-1930s',
+            description: 'Art Deco architecture is characterized by bold geometric patterns, vibrant colors, and lavish ornamentation. It represented luxury, glamour, exuberance, and faith in social and technological progress.',
+            imageUrl: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+            isStatic: true
+        },
+        {
+            _id: 'static3',
+            name: 'Modernism',
+            period: '1920s-1980s',
+            description: 'Modernist architecture emphasizes function, simplicity, clean lines, and the use of industrial materials like concrete, glass, and steel. Form follows function is a key principle.',
+            imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+            isStatic: true
+        }
+    ];
+
+    // Function to fetch recommendations
+    const fetchRecommendations = useCallback(async () => {
+        if (!isAuthenticated) return;
+
+        try {
+            setLoading(true);
+            const res = await styleAPI.getRecommendations();
+            setRecommendedStyles(res.data);
+            setLoading(false);
+        } catch (err) {
+            console.error('Error fetching recommendations:', err);
+            setError('Failed to load recommendations');
+            setLoading(false);
+        }
+    }, [isAuthenticated]);
+
+    // Initial data load
     useEffect(() => {
-        const fetchFeaturedStyles = async () => {
+        const fetchData = async () => {
             try {
-                const res = await styleAPI.getAllStyles();
+                setLoading(true);
 
-                if (res.data.length > 0) {
-                    // Get first 3 styles as featured
-                    setFeaturedStyles(res.data.slice(0, 3));
+                if (isAuthenticated) {
+                    // Get recommendations for logged-in users
+                    await fetchRecommendations();
                 } else {
-                    // If no styles exist, set sample styles
-                    setFeaturedStyles([
-                        {
-                            _id: 'sample1',
-                            name: 'Gothic',
-                            period: '12th-16th century',
-                            description: 'Gothic architecture is characterized by pointed arches, ribbed vaults, flying buttresses, and large stained glass windows.',
-                            imageUrl: 'https://images.unsplash.com/photo-1543832923-44667a44c804?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-                        },
-                        {
-                            _id: 'sample2',
-                            name: 'Art Deco',
-                            period: '1920s-1930s',
-                            description: 'Art Deco architecture features bold, geometric patterns, vibrant colors, and stylized representations of natural and machine-made objects.',
-                            imageUrl: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-                        },
-                        {
-                            _id: 'sample3',
-                            name: 'Modernism',
-                            period: '1920s-1980s',
-                            description: 'Modernist architecture emphasizes function, simplicity, clean lines, and the use of industrial materials like concrete, glass, and steel.',
-                            imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-                        }
-                    ]);
+                    // For non-logged in users, set the static featured styles
+                    setFeaturedStyles(staticFeaturedStyles);
+                    setLoading(false);
                 }
             } catch (err) {
-                console.error('Error fetching styles:', err);
-                // Set sample styles if API fails
-                setFeaturedStyles([
-                    {
-                        _id: 'sample1',
-                        name: 'Gothic',
-                        period: '12th-16th century',
-                        description: 'Gothic architecture is characterized by pointed arches, ribbed vaults, flying buttresses, and large stained glass windows.',
-                        imageUrl: 'https://images.unsplash.com/photo-1543832923-44667a44c804?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-                    },
-                    {
-                        _id: 'sample2',
-                        name: 'Art Deco',
-                        period: '1920s-1930s',
-                        description: 'Art Deco architecture features bold, geometric patterns, vibrant colors, and stylized representations of natural and machine-made objects.',
-                        imageUrl: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-                    },
-                    {
-                        _id: 'sample3',
-                        name: 'Modernism',
-                        period: '1920s-1980s',
-                        description: 'Modernist architecture emphasizes function, simplicity, clean lines, and the use of industrial materials like concrete, glass, and steel.',
-                        imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-                    }
-                ]);
-            } finally {
+                console.error('Error loading data:', err);
+                setError('Failed to load content');
                 setLoading(false);
             }
         };
 
-        fetchFeaturedStyles();
-    }, []);
+        fetchData();
+    }, [isAuthenticated, fetchRecommendations]);
+
+    // Toggle a style as favorite
+    const toggleFavorite = async (styleId) => {
+        if (!isAuthenticated) return;
+
+        try {
+            // Call API to toggle favorite
+            await userAPI.toggleFavorite(styleId);
+
+            // Remove this style from recommendations
+            setRecommendedStyles(prev => prev.filter(style => style._id !== styleId));
+
+            // Fetch a new recommendation to replace it
+            fetchRecommendations();
+        } catch (err) {
+            console.error('Error toggling favorite:', err);
+        }
+    };
+
+    // What styles to display in the featured section
+    const displayStyles = isAuthenticated ? recommendedStyles : featuredStyles;
 
     if (loading) {
         return <div className="center">Loading...</div>;
@@ -97,17 +121,33 @@ const Home = () => {
                         Explore the beauty and history of architecture from around the world.
                         Learn about different styles, their characteristics, and famous examples.
                     </p>
-                    <Link to="/styles" className="btn btn-primary">
-                        Browse Styles
-                    </Link>
+                    {isAuthenticated && (
+                        <Link to="/styles" className="btn btn-primary">
+                            Browse Styles
+                        </Link>
+                    )}
                 </div>
             </section>
 
             <section className="featured">
-                <div className="container">
-                    <h2>Featured Styles</h2>
+                <h2>{isAuthenticated ? 'Recommended For You' : 'Featured Styles'}</h2>
+
+                {isAuthenticated && (
+                    <p className="section-description">
+                        Based on your favorites, you might also like these architectural styles.
+                    </p>
+                )}
+
+                {error && <div className="alert alert-danger">{error}</div>}
+
+                {displayStyles.length === 0 && isAuthenticated ? (
+                    <div className="empty-recommendations">
+                        <p>Add some favorite styles to get personalized recommendations.</p>
+                        <Link to="/styles" className="btn btn-outline">Browse Styles</Link>
+                    </div>
+                ) : (
                     <div className="styles-grid">
-                        {featuredStyles.map((style) => (
+                        {displayStyles.map((style) => (
                             <div key={style._id} className="style-card">
                                 {style.imageUrl && (
                                     <img
@@ -118,26 +158,29 @@ const Home = () => {
                                 )}
                                 <div className="style-content">
                                     <h3>{style.name}</h3>
-                                    <p>{style.period}</p>
+                                    <p className={isAuthenticated ? "period-highlight" : "period"}>{style.period}</p>
                                     <p>{style.description.substring(0, 100)}...</p>
-                                    {!style._id.startsWith('sample') ? (
-                                        <Link to={`/styles/${style._id}`} className="btn btn-outline">
+
+                                    <div className="card-actions">
+                                        <Link to={!style.isStatic ? `/styles/${style._id}` : '/styles'} className="btn btn-outline">
                                             Learn More
                                         </Link>
-                                    ) : (
-                                        isAdmin ? (
-                                            <Link to="/styles/add" className="btn btn-outline">
-                                                Add Real Styles
-                                            </Link>
-                                        ) : (
-                                            <span className="sample-badge">Sample</span>
-                                        )
-                                    )}
+
+                                        {isAuthenticated && !style.isStatic && (
+                                            <button
+                                                onClick={() => toggleFavorite(style._id)}
+                                                className="favorite-btn add"
+                                                title="Add to favorites"
+                                            >
+                                                ★
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </div>
+                )}
             </section>
 
             <section className="info">
@@ -149,8 +192,9 @@ const Home = () => {
                         detailed information about architectural movements, their distinctive features, and iconic examples.
                     </p>
                     <p>
-                        Create an account to save your favorite styles and contribute to our growing community of
-                        architecture lovers.
+                        {isAuthenticated
+                            ? "Explore different styles and add them to your favorites to get personalized recommendations."
+                            : "Create an account to save your favorite styles and get personalized recommendations."}
                     </p>
                 </div>
             </section>
